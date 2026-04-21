@@ -13,6 +13,9 @@ const Header = () => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
+  const cart = useSelector((state) => state.cart);
+  const { cartItems } = cart || { cartItems: [] };
+
   const logoutHandler = () => {
     dispatch(logout());
   };
@@ -122,8 +125,21 @@ const Header = () => {
 
               <Nav
                 className="align-items-center flex-row"
-                style={{ gap: "1.2rem" }}
+                style={{ gap: "1.2rem", position: 'relative' }}
               >
+                <LinkContainer to="/cart">
+                  <Nav.Link className="position-relative p-2" title="Cart">
+                    <i className="fas fa-shopping-cart" style={{ fontSize: "1.3rem", color: "#829ab1" }}></i>
+                    {cartItems && cartItems.length > 0 && (
+                      <span 
+                        className="badge bg-primary text-dark rounded-circle position-absolute d-flex align-items-center justify-content-center fw-bold" 
+                        style={{ top: "0", right: "0", fontSize: "0.6rem", width: "16px", height: "16px" }}
+                      >
+                        {cartItems.reduce((acc, item) => acc + item.qty, 0)}
+                      </span>
+                    )}
+                  </Nav.Link>
+                </LinkContainer>
                 {userInfo ? (
                   <NavDropdown
                     title={

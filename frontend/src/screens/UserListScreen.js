@@ -4,6 +4,7 @@ import { Table, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
+import EmptyState from '../components/EmptyState'
 import { listUsers, deleteUser } from '../actions/userActions'
 
 const UserListScreen = ({ history }) => {
@@ -108,6 +109,9 @@ const UserListScreen = ({ history }) => {
                     </td>
                   </tr>
                 ))}
+                {(!users || users.length === 0) && (
+                  <EmptyState message="No users found." columns="6" icon="fas fa-users" />
+                )}
               </tbody>
             </Table>
           </div>

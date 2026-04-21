@@ -5,7 +5,7 @@ import Product from "../models/productModel.js";
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = 10;
+  const pageSize = 24;
   const page = Number(req.query.pageNumber) || 1;
 
   const keyword = req.query.keyword
@@ -24,8 +24,13 @@ const getProducts = asyncHandler(async (req, res) => {
     typeFilter.auctionMode = { $ne: true };
   }
 
-  const count = await Product.countDocuments({ ...keyword, ...typeFilter });
-  const products = await Product.find({ ...keyword, ...typeFilter })
+  let categoryFilter = {};
+  if (req.query.category) {
+      categoryFilter.category = req.query.category;
+  }
+
+  const count = await Product.countDocuments({ ...keyword, ...typeFilter, ...categoryFilter });
+  const products = await Product.find({ ...keyword, ...typeFilter, ...categoryFilter })
     .sort({ createdAt: -1, _id: 1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1));

@@ -4,6 +4,7 @@ import { Table, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
+import EmptyState from '../components/EmptyState'
 import { listOrders } from '../actions/orderActions'
 
 const OrderListScreen = ({ history }) => {
@@ -77,6 +78,9 @@ const OrderListScreen = ({ history }) => {
                     </td>
                   </tr>
                 ))}
+                {(!orders || orders.length === 0) && (
+                  <EmptyState message="No orders to show." columns="7" icon="fas fa-shopping-cart" />
+                )}
               </tbody>
             </Table>
           </div>

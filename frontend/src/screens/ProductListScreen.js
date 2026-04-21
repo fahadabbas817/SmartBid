@@ -4,6 +4,7 @@ import { Table, Button, Row, Col } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
+import EmptyState from '../components/EmptyState'
 import Paginate from '../components/Paginate'
 import {
   listProducts,
@@ -130,6 +131,9 @@ const ProductListScreen = ({ history, match }) => {
                       </td>
                     </tr>
                   ))}
+                  {(!products || products.length === 0) && (
+                    <EmptyState message="No products found." columns="6" icon="fas fa-box-open" />
+                  )}
                 </tbody>
               </Table>
             </div>

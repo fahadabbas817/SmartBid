@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Row, Col } from "react-bootstrap";
+import { Row, Col, Form } from "react-bootstrap";
 import Product from "../components/Product";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
@@ -20,10 +20,12 @@ const HomeScreen = ({ match, mode = "" }) => {
   const productList = useSelector((state) => state.productList);
   const { loading, error, products, page, pages } = productList;
 
+  const [category, setCategory] = useState("");
+
   useEffect(() => {
-    dispatch(listProducts(keyword, pageNumber, mode));
+    dispatch(listProducts(keyword, pageNumber, mode, category));
     window.scrollTo(0, 0); // Scroll to the top of the page
-  }, [dispatch, keyword, pageNumber, mode]);
+  }, [dispatch, keyword, pageNumber, mode, category]);
 
   // Enforce exclusively pure Auction items on Front Page
   const auctionItems = products
@@ -123,6 +125,21 @@ const HomeScreen = ({ match, mode = "" }) => {
                 >
                   Direct Market (Buy It Now)
                 </h2>
+                {mode === 'shop' && (
+                  <Form.Control
+                    as="select"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    style={{ width: '200px', backgroundColor: '#0b1521', color: '#f8fafc', borderColor: 'rgba(255,255,255,0.1)' }}
+                    className="shadow-sm"
+                  >
+                    <option value="">All Categories</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Home">Home</option>
+                    <option value="Automotive">Automotive</option>
+                  </Form.Control>
+                )}
               </div>
               <Row>
                 {fixedProducts.map((product) => (
