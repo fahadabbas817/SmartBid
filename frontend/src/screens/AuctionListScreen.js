@@ -5,6 +5,7 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { Link } from 'react-router-dom';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 import { listProducts, endAuctionEarly } from '../actions/productActions';
 import { updateCheck } from '../actions/checkActions';
 
@@ -160,7 +161,7 @@ const AuctionListScreen = ({ history, match }) => {
                       )}
                     </td>
                     <td className="px-3 py-3 text-end">
-                      <div className='d-flex justify-content-end align-items-center' style={{ gap: '0.8rem' }}>
+                      <div className='d-flex justify-content-end align-items-center flex-nowrap' style={{ gap: '0.8rem' }}>
                         <LinkContainer to={`/admin/product/${product._id}/edit`}>
                           <Button variant='dark' className='btn-sm rounded-circle shadow-sm border-0 d-flex align-items-center justify-content-center' title="Edit Product" style={{ backgroundColor: '#1a2838', width: '35px', height: '35px', padding: 0 }}>
                             <i className='fas fa-edit text-info'></i>
@@ -182,11 +183,7 @@ const AuctionListScreen = ({ history, match }) => {
                   </tr>
                 ))}
                 {(!products || products.length === 0) && (
-                  <tr>
-                    <td colSpan="6" className="text-center py-5 text-muted">
-                      No active auction products found.
-                    </td>
-                  </tr>
+                  <EmptyState message="No active auction products found." columns="6" icon="fas fa-gavel" />
                 )}
               </tbody>
             </Table>

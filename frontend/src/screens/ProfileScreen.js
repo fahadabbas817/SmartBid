@@ -4,6 +4,7 @@ import { LinkContainer } from 'react-router-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
+import EmptyState from '../components/EmptyState'
 import { getUserDetails, updateUserProfile } from '../actions/userActions'
 import { listMyOrders } from '../actions/orderActions'
 import { USER_UPDATE_PROFILE_RESET } from '../constants/userConstants'
@@ -177,6 +178,9 @@ const ProfileScreen = ({ location, history }) => {
                     </td>
                   </tr>
                 ))}
+                {(!orders || orders.length === 0) && (
+                  <EmptyState message="No orders found." columns="6" icon="fas fa-shopping-cart" />
+                )}
               </tbody>
             </Table>
           )}

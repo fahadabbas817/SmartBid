@@ -60,13 +60,13 @@ export const endAuctionEarly = (productId) => async (dispatch, getState) => {
 };
 
 export const listProducts =
-  (keyword = "", pageNumber = "", mode = "") =>
+  (keyword = "", pageNumber = "", mode = "", category = "") =>
   async (dispatch) => {
     try {
       dispatch({ type: PRODUCT_LIST_REQUEST });
 
       const { data } = await axios.get(
-        `/api/products?keyword=${keyword}&pageNumber=${pageNumber}&type=${mode}`,
+        `/api/products?keyword=${keyword}&pageNumber=${pageNumber}&type=${mode}&category=${category}`,
       );
 
       dispatch({
