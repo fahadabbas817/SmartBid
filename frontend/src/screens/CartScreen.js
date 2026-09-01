@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Row, Col, ListGroup, Image, Form, Button, Card } from 'react-bootstrap'
 import Message from '../components/Message'
+import Price from '../components/Price'
 import { addToCart, removeFromCart } from '../actions/cartActions'
 
 const CartScreen = ({ match, location, history }) => {
@@ -51,7 +52,7 @@ const CartScreen = ({ match, location, history }) => {
                     <Col md={3} className="d-flex align-items-center mb-2 mb-md-0">
                       <Link to={`/product/${item.product}`} className="font-weight-bold text-dark text-decoration-none" style={{ fontSize: '1.1rem' }}>{item.name}</Link>
                     </Col>
-                    <Col md={2} className="d-flex align-items-center mb-2 mb-md-0 font-weight-bold" style={{ color: 'var(--primary-color)', fontSize: '1.1rem' }}>${item.price}</Col>
+                    <Col md={2} className="d-flex align-items-center mb-2 mb-md-0 font-weight-bold" style={{ color: 'var(--primary-color)', fontSize: '1.1rem' }}><Price amount={item.price} /></Col>
                     <Col md={3} className="d-flex align-items-center mb-2 mb-md-0">
                       <Form.Control
                         as='select'
@@ -100,9 +101,7 @@ const CartScreen = ({ match, location, history }) => {
               <div className="d-flex justify-content-between align-items-end">
                 <span className="text-slate-muted font-weight-bold">Total Price:</span>
                 <span className="text-white font-weight-bold" style={{ fontSize: '1.8rem' }}>
-                  ${cartItems
-                    .reduce((acc, item) => acc + item.qty * item.price, 0)
-                    .toFixed(2)}
+                  <Price amount={cartItems.reduce((acc, item) => acc + item.qty * item.price, 0)} />
                 </span>
               </div>
             </ListGroup.Item>

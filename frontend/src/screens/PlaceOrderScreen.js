@@ -4,6 +4,7 @@ import { Button, Row, Col, ListGroup, Image, Card } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import CheckoutSteps from "../components/CheckoutSteps";
+import Price from "../components/Price";
 import { createOrder } from "../actions/orderActions";
 import { ORDER_CREATE_RESET } from "../constants/orderConstants";
 import { USER_DETAILS_RESET } from "../constants/userConstants";
@@ -139,10 +140,10 @@ const PlaceOrderScreen = ({ history }) => {
                         </Col>
                         <Col md={4} className="text-right text-white">
                           <span className="text-muted">
-                            {item.qty} x ${item.price} =
+                            {item.qty} x <Price amount={item.price} /> =
                           </span>{" "}
                           <span className="emerald-text font-weight-bold">
-                            ${item.qty * item.price}
+                            <Price amount={item.qty * item.price} />
                           </span>
                         </Col>
                       </Row>
@@ -173,7 +174,7 @@ const PlaceOrderScreen = ({ history }) => {
               >
                 <Row>
                   <Col className="text-muted small font-weight-bold">ITEMS</Col>
-                  <Col className="text-right">${cart.itemsPrice}</Col>
+                  <Col className="text-right"><Price amount={cart.itemsPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item
@@ -184,7 +185,7 @@ const PlaceOrderScreen = ({ history }) => {
                   <Col className="text-muted small font-weight-bold">
                     SHIPPING
                   </Col>
-                  <Col className="text-right">${cart.shippingPrice}</Col>
+                  <Col className="text-right"><Price amount={cart.shippingPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item
@@ -193,7 +194,7 @@ const PlaceOrderScreen = ({ history }) => {
               >
                 <Row>
                   <Col className="text-muted small font-weight-bold">TAX</Col>
-                  <Col className="text-right">${cart.taxPrice}</Col>
+                  <Col className="text-right"><Price amount={cart.taxPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item className="bg-transparent mb-3 text-white">
@@ -202,7 +203,7 @@ const PlaceOrderScreen = ({ history }) => {
                     TOTAL
                   </Col>
                   <Col className="text-right h5 emerald-text font-weight-bold m-0">
-                    ${cart.totalPrice}
+                    <Price amount={cart.totalPrice} />
                   </Col>
                 </Row>
               </ListGroup.Item>

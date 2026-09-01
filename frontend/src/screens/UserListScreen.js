@@ -4,7 +4,6 @@ import { Table, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
-import EmptyState from '../components/EmptyState'
 import { listUsers, deleteUser } from '../actions/userActions'
 
 const UserListScreen = ({ history }) => {
@@ -43,6 +42,12 @@ const UserListScreen = ({ history }) => {
           <Loader />
         ) : error ? (
           <Message variant='danger'>{error}</Message>
+        ) : users.length === 0 ? (
+          <div className="empty-state-glass">
+            <i className="fas fa-users-slash"></i>
+            <h4 className="text-white">No Users Found</h4>
+            <p className="text-muted">There are no users registered in the platform yet.</p>
+          </div>
         ) : (
           <div className='table-responsive'>
             <Table hover variant='dark' className='table-custom-dark align-middle mb-0' style={{ backgroundColor: '#0b1521' }}>
@@ -109,9 +114,6 @@ const UserListScreen = ({ history }) => {
                     </td>
                   </tr>
                 ))}
-                {(!users || users.length === 0) && (
-                  <EmptyState message="No users found." columns="6" icon="fas fa-users" />
-                )}
               </tbody>
             </Table>
           </div>

@@ -20,12 +20,10 @@ const HomeScreen = ({ match, mode = "" }) => {
   const productList = useSelector((state) => state.productList);
   const { loading, error, products, page, pages } = productList;
 
-  const [category, setCategory] = useState("");
-
   useEffect(() => {
-    dispatch(listProducts(keyword, pageNumber, mode, category));
+    dispatch(listProducts(keyword, pageNumber, mode));
     window.scrollTo(0, 0); // Scroll to the top of the page
-  }, [dispatch, keyword, pageNumber, mode, category]);
+  }, [dispatch, keyword, pageNumber, mode]);
 
   // Enforce exclusively pure Auction items on Front Page
   const auctionItems = products
@@ -33,10 +31,27 @@ const HomeScreen = ({ match, mode = "" }) => {
     : [];
   const activeAuctions = auctionItems.filter((p) => !p.isAuctionClosed);
 
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   // Isolate static fixed-price standard eCommerce items
-  const fixedProducts = products
+  const fixedProductsRaw = products
     ? products.filter((p) => p.auctionMode !== true)
     : [];
+
+  const availableCategories = [
+    'All',
+    'Electronics',
+    'Fashion',
+    'Antiquities',
+    'Home & Garden',
+    'Automotive',
+    'Collectibles',
+    'Other',
+  ];
+
+  const fixedProducts = selectedCategory === "All"
+    ? fixedProductsRaw
+    : fixedProductsRaw.filter(p => p.category === selectedCategory);
 
   return (
     <>
@@ -128,26 +143,36 @@ const HomeScreen = ({ match, mode = "" }) => {
                 {mode === 'shop' && (
                   <Form.Control
                     as="select"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    style={{ width: '200px', backgroundColor: '#0b1521', color: '#f8fafc', borderColor: 'rgba(255,255,255,0.1)' }}
-                    className="shadow-sm"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="bg-transparent text-white border-secondary rounded-pill font-weight-bold px-4"
+                    style={{ width: "auto", minWidth: "150px", cursor: "pointer", fontSize: "0.9rem" }}
                   >
-                    <option value="">All Categories</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Fashion">Fashion</option>
-                    <option value="Home">Home</option>
-                    <option value="Automotive">Automotive</option>
+                    {availableCategories.map(category => (
+                      <option key={category} value={category} style={{ color: "#ffffff", backgroundColor: "#0b1521" }}>
+                        {category}
+                      </option>
+                    ))}
                   </Form.Control>
                 )}
               </div>
-              <Row>
+              
+              {fixedProducts.length === 0 && mode === 'shop' ? (
+                <div className="empty-state-glass my-5">
+                   <i className="fas fa-search-minus"></i>
+                   <h4 className="text-white">No items found in {selectedCategory}</h4>
+                   <p className="text-muted">Try selecting a different category.</p>
+                </div>
+              ) : (
+                <Row>
                 {fixedProducts.map((product) => (
                   <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
                     <Product product={product} />
                   </Col>
                 ))}
-              </Row>
+                </Row>
+              )}
+              
               {mode === '' && fixedProducts.length > 0 && (
                  <div className="text-center mt-2">
                     <Link to="/shop" className="btn btn-outline-primary rounded-pill px-5 font-weight-bold" style={{ borderWidth: "2px", color: "var(--primary-color)", backgroundColor: "transparent" }}>

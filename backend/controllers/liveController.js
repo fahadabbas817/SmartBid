@@ -116,6 +116,7 @@ const placeBid = asyncHandler(async (req, res) => {
       payload.timeExtended = true;
     }
     io.to(productId).emit('bidUpdated', payload);
+    io.emit('bidUpdatedGlobal', payload); // Broadcast to all connected clients (e.g. for Home Screen cards)
   }
 
   res.status(201).json({ message: 'Success! Your bid holds the high ground.', bid });

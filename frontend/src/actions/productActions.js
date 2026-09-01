@@ -24,6 +24,12 @@ import {
   PRODUCT_END_AUCTION_REQUEST,
   PRODUCT_END_AUCTION_SUCCESS,
   PRODUCT_END_AUCTION_FAIL,
+  SELLER_PRODUCT_LIST_REQUEST,
+  SELLER_PRODUCT_LIST_SUCCESS,
+  SELLER_PRODUCT_LIST_FAIL,
+  PRODUCT_REPUBLISH_REQUEST,
+  PRODUCT_REPUBLISH_SUCCESS,
+  PRODUCT_REPUBLISH_FAIL,
 } from "../constants/productConstants";
 import { logout } from "./userActions";
 
@@ -60,13 +66,13 @@ export const endAuctionEarly = (productId) => async (dispatch, getState) => {
 };
 
 export const listProducts =
-  (keyword = "", pageNumber = "", mode = "", category = "") =>
+  (keyword = "", pageNumber = "", mode = "", status = "", pageSize = "") =>
   async (dispatch) => {
     try {
       dispatch({ type: PRODUCT_LIST_REQUEST });
 
       const { data } = await axios.get(
-        `/api/products?keyword=${keyword}&pageNumber=${pageNumber}&type=${mode}&category=${category}`,
+        `/api/products?keyword=${keyword}&pageNumber=${pageNumber}&type=${mode}&status=${status}&pageSize=${pageSize}`,
       );
 
       dispatch({
@@ -276,6 +282,75 @@ export const listTopProducts = () => async (dispatch) => {
         error.response && error.response.data.message
           ? error.response.data.message
           : error.message,
+    });
+  }
+};
+
+export const listMyProducts =
+  (pageNumber = "") =>
+  async (dispatch, getState) => {
+    try {
+      dispatch({ type: SELLER_PRODUCT_LIST_REQUEST });
+
+      const {
+        userLogin: { userInfo },
+      } = getState();
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      };
+
+      const { data } = await axios.get(
+        `/api/products/mine?pageNumber=${pageNumber}`,
+        config
+      );
+
+      dispatch({ type: SELLER_PRODUCT_LIST_SUCCESS, payload: data });
+    } catch (error) {
+      const message =
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message;
+      if (message === "Not authorized, token failed") {
+        dispatch(logout());
+      }
+      dispatch({ type: SELLER_PRODUCT_LIST_FAIL, payload: message });
+    }
+  };
+
+export const republishAuctions = (productIds = []) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: PRODUCT_REPUBLISH_REQUEST });
+
+    const {
+      userLogin: { userInfo },
+    } = getState();
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userInfo.token}`,
+      },
+    };
+
+    const { data } = await axios.put(`/api/products/republish-auctions`, { productIds }, config);
+
+    dispatch({
+      type: PRODUCT_REPUBLISH_SUCCESS,
+      payload: data,
+    });
+  } catch (error) {
+    const message =
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+    if (message === "Not authorized, token failed") {
+      dispatch(logout());
+    }
+    dispatch({
+      type: PRODUCT_REPUBLISH_FAIL,
+      payload: message,
     });
   }
 };

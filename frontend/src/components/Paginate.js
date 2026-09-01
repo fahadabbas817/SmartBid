@@ -2,8 +2,9 @@ import React from "react";
 import { Pagination } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 
-const Paginate = ({ pages, page, isAdmin = false, keyword = "", mode = "" }) => {
+const Paginate = ({ pages, page, isAdmin = false, keyword = '', mode = '', sellerBase = '' }) => {
   const getLink = (x) => {
+    if (sellerBase) return `${sellerBase}/${x}`;
     if (isAdmin) return `/admin/productlist/${x}`;
     let prefix = mode === 'auction' ? '/auctions' : mode === 'shop' ? '/shop' : '';
     if (keyword) {

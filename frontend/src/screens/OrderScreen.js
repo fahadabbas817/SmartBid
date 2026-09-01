@@ -14,6 +14,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
+import Price from "../components/Price";
 import {
   getOrderDetails,
   payOrder,
@@ -48,7 +49,7 @@ const OrderScreen = ({ match, history }) => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  if (!loading) {
+  if (!loading && order) {
     // Calculate prices
     const addDecimals = (num) => {
       return (Math.round(num * 100) / 100).toFixed(2);
@@ -58,6 +59,12 @@ const OrderScreen = ({ match, history }) => {
       order.orderItems.reduce((acc, item) => acc + item.price * item.qty, 0),
     );
   }
+
+  const isOrderOwner = order && userInfo && (
+    (order.user && order.user._id && order.user._id.toString() === userInfo._id.toString()) ||
+    (order.user && typeof order.user === 'string' && order.user === userInfo._id.toString()) ||
+    (order.user === userInfo._id)
+  );
 
   useEffect(() => {
     if (!userInfo) {
@@ -146,18 +153,18 @@ const OrderScreen = ({ match, history }) => {
                 <strong className="text-muted small uppercase mr-2">
                   Name:
                 </strong>{" "}
-                {order.user.name}
+                {order.user && order.user.name ? order.user.name : (isOrderOwner ? userInfo.name : "Unknown")}
               </p>
               <p className="text-white mb-2">
                 <strong className="text-muted small uppercase mr-2">
                   Email:
                 </strong>{" "}
                 <a
-                  href={`mailto:${order.user.email}`}
+                  href={`mailto:${order.user && order.user.email ? order.user.email : (isOrderOwner ? userInfo.email : "")}`}
                   className="text-info"
                   style={{ textDecoration: "none" }}
                 >
-                  {order.user.email}
+                  {order.user && order.user.email ? order.user.email : (isOrderOwner ? userInfo.email : "Unknown")}
                 </a>
               </p>
               <p className="text-white mb-3">
@@ -178,7 +185,7 @@ const OrderScreen = ({ match, history }) => {
                 )}
               </p>
               {order.isDelivered ? (
-                <div className="p-3 rounded bg-success bg-opacity-10 text-success small font-weight-bold border border-success d-flex align-items-center">
+                <div className="p-3 rounded text-success small font-weight-bold border border-success d-flex align-items-center" style={{ backgroundColor: "rgba(40, 167, 69, 0.1)" }}>
                   <i
                     className="fas fa-check-circle mr-2"
                     style={{ fontSize: "1.2rem" }}
@@ -186,7 +193,7 @@ const OrderScreen = ({ match, history }) => {
                   <span>Delivered on {order.deliveredAt.substring(0, 10)}</span>
                 </div>
               ) : (
-                <div className="p-3 rounded bg-danger bg-opacity-10 text-danger small font-weight-bold border border-danger d-flex align-items-center">
+                <div className="p-3 rounded text-danger small font-weight-bold border border-danger d-flex align-items-center" style={{ backgroundColor: "rgba(220, 53, 69, 0.1)" }}>
                   <i
                     className="fas fa-clock mr-2"
                     style={{ fontSize: "1.2rem" }}
@@ -212,7 +219,7 @@ const OrderScreen = ({ match, history }) => {
                 </span>
               </p>
               {order.isPaid ? (
-                <div className="p-3 rounded bg-success bg-opacity-10 text-success small font-weight-bold border border-success d-flex align-items-center">
+                <div className="p-3 rounded text-success small font-weight-bold border border-success d-flex align-items-center" style={{ backgroundColor: "rgba(40, 167, 69, 0.1)" }}>
                   <i
                     className="fas fa-check-circle mr-2"
                     style={{ fontSize: "1.2rem" }}
@@ -222,7 +229,7 @@ const OrderScreen = ({ match, history }) => {
                   </span>
                 </div>
               ) : (
-                <div className="p-3 rounded bg-warning bg-opacity-10 text-warning small font-weight-bold border border-warning d-flex align-items-center">
+                <div className="p-3 rounded text-warning small font-weight-bold border border-warning d-flex align-items-center" style={{ backgroundColor: "rgba(255, 193, 7, 0.1)" }}>
                   <i
                     className="fas fa-exclamation-triangle mr-2"
                     style={{ fontSize: "1.2rem" }}
@@ -267,10 +274,10 @@ const OrderScreen = ({ match, history }) => {
                         </Col>
                         <Col md={4} className="text-right text-white">
                           <span className="text-muted">
-                            {item.qty} x ${item.price} =
+                            {item.qty} x <Price amount={item.price} /> =
                           </span>{" "}
                           <span className="emerald-text font-weight-bold">
-                            ${item.qty * item.price}
+                            <Price amount={item.qty * item.price} />
                           </span>
                         </Col>
                       </Row>
@@ -301,7 +308,7 @@ const OrderScreen = ({ match, history }) => {
               >
                 <Row>
                   <Col className="text-muted small font-weight-bold">ITEMS</Col>
-                  <Col className="text-right">${order.itemsPrice}</Col>
+                  <Col className="text-right"><Price amount={order.itemsPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item
@@ -312,7 +319,7 @@ const OrderScreen = ({ match, history }) => {
                   <Col className="text-muted small font-weight-bold">
                     SHIPPING
                   </Col>
-                  <Col className="text-right">${order.shippingPrice}</Col>
+                  <Col className="text-right"><Price amount={order.shippingPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item
@@ -321,7 +328,7 @@ const OrderScreen = ({ match, history }) => {
               >
                 <Row>
                   <Col className="text-muted small font-weight-bold">TAX</Col>
-                  <Col className="text-right">${order.taxPrice}</Col>
+                  <Col className="text-right"><Price amount={order.taxPrice} /></Col>
                 </Row>
               </ListGroup.Item>
               <ListGroup.Item className="bg-transparent mb-2 text-white">
@@ -330,11 +337,11 @@ const OrderScreen = ({ match, history }) => {
                     TOTAL
                   </Col>
                   <Col className="text-right h5 emerald-text font-weight-bold m-0">
-                    ${order.totalPrice}
+                    <Price amount={order.totalPrice} />
                   </Col>
                 </Row>
               </ListGroup.Item>
-              {!order.isPaid && !userInfo.isAdmin && (
+              {!order.isPaid && isOrderOwner && (
                 <ListGroup.Item className="bg-transparent border-0 pt-0 text-center">
                   {order.shippingAddress.address === "TBD" ? (
                     <div

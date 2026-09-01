@@ -4,7 +4,7 @@ import { LinkContainer } from 'react-router-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
-import EmptyState from '../components/EmptyState'
+import Price from '../components/Price'
 import { getUserDetails, updateUserProfile } from '../actions/userActions'
 import { listMyOrders } from '../actions/orderActions'
 import { USER_UPDATE_PROFILE_RESET } from '../constants/userConstants'
@@ -129,6 +129,12 @@ const ProfileScreen = ({ location, history }) => {
             <Loader />
           ) : errorOrders ? (
             <Message variant='danger'>{errorOrders}</Message>
+          ) : orders.length === 0 ? (
+            <div className="empty-state-glass">
+                <i className="fas fa-shopping-bag"></i>
+                <h4 className="text-white">No Orders Yet</h4>
+                <p className="text-muted">You haven't purchased any items yet.</p>
+            </div>
           ) : (
             <Table hover responsive className='table-custom-dark mb-0'>
               <thead>
@@ -146,7 +152,7 @@ const ProfileScreen = ({ location, history }) => {
                   <tr key={order._id} className="text-white align-middle border-bottom border-secondary" style={{ borderColor: 'rgba(255,255,255,0.05) !important' }}>
                     <td className="py-3 text-muted" style={{ fontSize: '0.85rem' }}>{order._id}</td>
                     <td className="py-3 font-weight-bold">{order.createdAt.substring(0, 10)}</td>
-                    <td className="py-3 font-weight-bold text-success">${order.totalPrice}</td>
+                    <td className="py-3 font-weight-bold text-success"><Price amount={order.totalPrice} /></td>
                     <td className="py-3">
                       {order.isPaid ? (
                         <span className="badge bg-success-soft text-success px-3 py-2 rounded-pill font-weight-bold">
@@ -178,9 +184,6 @@ const ProfileScreen = ({ location, history }) => {
                     </td>
                   </tr>
                 ))}
-                {(!orders || orders.length === 0) && (
-                  <EmptyState message="No orders found." columns="6" icon="fas fa-shopping-cart" />
-                )}
               </tbody>
             </Table>
           )}

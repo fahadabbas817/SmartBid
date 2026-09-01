@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import Loader from './Loader'
 import Message from './Message'
 import MiniCountdown from './MiniCountdown'
+import Price from './Price'
 import { listTopProducts } from '../actions/productActions'
 
 const ProductCarousel = () => {
@@ -45,8 +46,13 @@ const ProductCarousel = () => {
                     </h3>
                     <div className="d-inline-flex flex-column align-items-center justify-content-center">
                       <div className="d-inline-flex align-items-center justify-content-center bg-light px-3 py-1 rounded-pill mb-2">
-                        <span className="font-weight-bold" style={{ color: 'var(--primary-color)', fontSize: '1.2rem' }}>${product.price}</span>
+                        <span className="font-weight-bold" style={{ color: product.auctionMode ? '#26c205' : 'var(--primary-color)', fontSize: '1.2rem' }}>
+                          <Price amount={product.auctionMode ? (product.currentBid || product.startingPrice || product.price) : product.price} />
+                        </span>
                       </div>
+                      {product.auctionMode && (
+                        <div className="text-muted small font-weight-bold mb-2">CURRENT BID</div>
+                      )}
                       {product.auctionMode && product.auctionEndTime && (
                          <div className="mt-1">
                            <MiniCountdown endTime={product.auctionEndTime} />
