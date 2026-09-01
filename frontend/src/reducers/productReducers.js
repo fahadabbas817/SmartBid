@@ -23,6 +23,14 @@ import {
   PRODUCT_TOP_REQUEST,
   PRODUCT_TOP_SUCCESS,
   PRODUCT_TOP_FAIL,
+  SELLER_PRODUCT_LIST_REQUEST,
+  SELLER_PRODUCT_LIST_SUCCESS,
+  SELLER_PRODUCT_LIST_FAIL,
+  PRODUCT_REPUBLISH_REQUEST,
+  PRODUCT_REPUBLISH_SUCCESS,
+  PRODUCT_REPUBLISH_FAIL,
+  PRODUCT_REPUBLISH_RESET,
+  PRODUCT_UPDATE_BID,
 } from '../constants/productConstants'
 
 export const productListReducer = (state = { products: [] }, action) => {
@@ -38,6 +46,15 @@ export const productListReducer = (state = { products: [] }, action) => {
       }
     case PRODUCT_LIST_FAIL:
       return { loading: false, error: action.payload }
+    case PRODUCT_UPDATE_BID:
+      return {
+        ...state,
+        products: state.products.map((p) =>
+          p._id === action.payload.productId
+            ? { ...p, currentBid: action.payload.newBid, auctionEndTime: action.payload.auctionEndTime || p.auctionEndTime }
+            : p
+        ),
+      }
     default:
       return state
   }
@@ -125,6 +142,15 @@ export const productTopRatedReducer = (state = { products: [] }, action) => {
       return { loading: false, products: action.payload }
     case PRODUCT_TOP_FAIL:
       return { loading: false, error: action.payload }
+    case PRODUCT_UPDATE_BID:
+      return {
+        ...state,
+        products: state.products.map((p) =>
+          p._id === action.payload.productId
+            ? { ...p, currentBid: action.payload.newBid, auctionEndTime: action.payload.auctionEndTime || p.auctionEndTime }
+            : p
+        ),
+      }
     default:
       return state
   }
@@ -139,6 +165,39 @@ export const productEndAuctionReducer = (state = {}, action) => {
     case 'PRODUCT_END_AUCTION_FAIL':
       return { loading: false, error: action.payload }
     case 'PRODUCT_END_AUCTION_RESET':
+      return {}
+    default:
+      return state
+  }
+}
+
+export const sellerProductListReducer = (state = { products: [] }, action) => {
+  switch (action.type) {
+    case SELLER_PRODUCT_LIST_REQUEST:
+      return { loading: true, products: [] }
+    case SELLER_PRODUCT_LIST_SUCCESS:
+      return {
+        loading: false,
+        products: action.payload.products,
+        pages: action.payload.pages,
+        page: action.payload.page,
+      }
+    case SELLER_PRODUCT_LIST_FAIL:
+      return { loading: false, error: action.payload }
+    default:
+      return state
+  }
+}
+
+export const productRepublishReducer = (state = {}, action) => {
+  switch (action.type) {
+    case PRODUCT_REPUBLISH_REQUEST:
+      return { loading: true }
+    case PRODUCT_REPUBLISH_SUCCESS:
+      return { loading: false, success: true, message: action.payload.message }
+    case PRODUCT_REPUBLISH_FAIL:
+      return { loading: false, error: action.payload }
+    case PRODUCT_REPUBLISH_RESET:
       return {}
     default:
       return state

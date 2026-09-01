@@ -14,17 +14,24 @@ const SearchBox = ({ history }) => {
   }
 
   return (
-    <Form onSubmit={submitHandler} className='d-flex align-items-center search-form-animated flex-nowrap'>
+    <Form onSubmit={submitHandler} className="d-flex align-items-center position-relative w-100 m-0">
+      <i
+        className="fas fa-search position-absolute text-muted"
+        style={{ left: "15px", zIndex: 5 }}
+      ></i>
       <Form.Control
-        type='text'
-        name='q'
+        type="text"
+        name="q"
         onChange={(e) => setKeyword(e.target.value)}
-        placeholder='Search Products...'
-        className='mr-2 search-input-animated'
+        placeholder="Search items..."
+        className="form-control search-input-animated border-0 text-white rounded-pill shadow-none focus-ring-primary"
+        style={{
+          paddingLeft: "40px",
+          width: "220px",
+          backgroundColor: "#0b1521",
+        }}
+        autoComplete="off"
       ></Form.Control>
-      <Button type='submit' variant='outline-warning' className='search-btn-animated flex-shrink-0 ml-2'>
-        <i className="fas fa-search mr-1"></i> Search
-      </Button>
     </Form>
   )
 }

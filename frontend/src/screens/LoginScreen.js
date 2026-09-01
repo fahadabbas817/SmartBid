@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
-import Message from '../components/Message';
-import FormContainer from '../components/FormContainer';
-import { login } from '../actions/userActions';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Form, Button, Row, Col } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import Message from "../components/Message";
+import FormContainer from "../components/FormContainer";
+import { login } from "../actions/userActions";
 
 const LoginScreen = ({ location, history }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const dispatch = useDispatch();
 
   const userLogin = useSelector((state) => state.userLogin);
   const { loading, error, userInfo } = userLogin;
 
-  const redirect = location.search ? location.search.split('=')[1] : '/';
+  const redirect = location.search ? location.search.split("=")[1] : "/";
 
   useEffect(() => {
     if (userInfo) {
@@ -30,7 +30,12 @@ const LoginScreen = ({ location, history }) => {
 
   return (
     <FormContainer>
-      <h2 className="text-center mb-4 font-weight-bold" style={{ color: 'var(--text-main)', letterSpacing: '-0.5px' }}>Welcome Back</h2>
+      <h2
+        className="text-center mb-4 font-weight-bold"
+        style={{ color: "var(--text-main)", letterSpacing: "-0.5px" }}
+      >
+        Welcome Back
+      </h2>
       {error && <Message variant="danger">{error}</Message>}
       <Form onSubmit={submitHandler}>
         <Form.Group controlId="email">
@@ -53,17 +58,34 @@ const LoginScreen = ({ location, history }) => {
           />
         </Form.Group>
 
-
-        <Button type="submit" variant="primary" className="w-100 mt-4 py-2 font-weight-bold" style={{ fontSize: '1.1rem' }} disabled={loading}>
-          {loading ? <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span> : ''}
-          {loading ? 'Signing In...' : 'Sign In'}
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-100 mt-4 py-2 font-weight-bold"
+          style={{ fontSize: "1.1rem" }}
+          disabled={loading}
+        >
+          {loading ? (
+            <span
+              className="spinner-border spinner-border-sm mr-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
+          ) : (
+            ""
+          )}
+          {loading ? "Signing In..." : "Sign In"}
         </Button>
       </Form>
 
       <Row className="py-3">
         <Col>
-          New Customer?{' '}
-          <Link to={redirect ? `/register?redirect=${redirect}` : '/register'}>
+          New Customer?{" "}
+          <Link
+            className="font-weight-bold"
+            style={{ color: "var(--primary-color)" }}
+            to={redirect ? `/register?redirect=${redirect}` : "/register"}
+          >
             Register
           </Link>
         </Col>

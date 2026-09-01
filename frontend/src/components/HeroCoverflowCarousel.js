@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-
+import Price from './Price';
 const dummyUpcoming = [
   { _id: 'dummy1', name: 'Rolex Daytona Platinum', image: '/images/sample.jpg', currentBid: 42000, auctionEndTime: Date.now() + 86400000 * 2, isDummy: true },
   { _id: 'dummy2', name: 'Porsche 911 GT3 RS', image: '/images/sample.jpg', currentBid: 310000, auctionEndTime: Date.now() + 86400000 * 5, isDummy: true },
@@ -88,7 +88,7 @@ const HeroCoverflowCarousel = ({ products }) => {
                            <div className="position-absolute text-left" style={{ bottom: '25px', left: '30px', maxWidth: '70%' }}>
                                <h3 className="text-white font-weight-bold mb-1" style={{ fontSize: '1.8rem', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>{item.name}</h3>
                                <p className="text-white text-uppercase font-weight-bold mb-3" style={{ letterSpacing: '1px', fontSize: '0.9rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                                   Current Bid: <span className="emerald-text ml-2" style={{ fontSize: '1rem' }}>${item.currentBid || item.startingPrice || 100}</span>
+                                   Current Bid: <span className="emerald-text ml-2" style={{ fontSize: '1.2rem' }}><Price amount={item.currentBid || item.startingPrice || item.price || 0} /></span>
                                </p>
                                
                                <Link to={item.isDummy ? '#' : `/product/${item._id}`}>

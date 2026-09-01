@@ -5,6 +5,7 @@ import { LinkContainer } from "react-router-bootstrap";
 import { Navbar, Nav, Container, NavDropdown, Button } from "react-bootstrap";
 import SearchBox from "./SearchBox";
 import { logout } from "../actions/userActions";
+import { setCurrency } from "../actions/currencyActions";
 import "../index.css";
 
 const Header = () => {
@@ -13,8 +14,12 @@ const Header = () => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  const cart = useSelector((state) => state.cart);
-  const { cartItems } = cart || { cartItems: [] };
+  const currencyState = useSelector((state) => state.currency) || { code: 'USD' };
+  const { code: currencyCode } = currencyState;
+
+  const toggleCurrency = () => {
+    dispatch(setCurrency(currencyCode === 'USD' ? 'PKR' : 'USD'));
+  };
 
   const logoutHandler = () => {
     dispatch(logout());
@@ -107,39 +112,30 @@ const Header = () => {
               className="d-flex align-items-center justify-content-end flex-nowrap mt-3 mt-xl-0"
               style={{ gap: "1.5rem" }}
             >
-              <div className="d-none d-xl-flex align-items-center position-relative mr-3">
-                <i
-                  className="fas fa-search position-absolute text-muted"
-                  style={{ left: "15px", zIndex: 5 }}
-                ></i>
-                <input
-                  type="text"
-                  className="form-control border-0 text-white rounded-pill"
-                  style={{
-                    paddingLeft: "40px",
-                    width: "220px",
-                    backgroundColor: "#0b1521",
-                  }}
-                />
+              <div className="d-none d-xl-flex align-items-center position-relative mr-3" style={{ minWidth: "220px" }}>
+                <Route render={({ history }) => <SearchBox history={history} />} />
               </div>
 
               <Nav
                 className="align-items-center flex-row"
-                style={{ gap: "1.2rem", position: 'relative' }}
+                style={{ gap: "1.2rem" }}
               >
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm" 
+                  onClick={toggleCurrency}
+                  className="font-weight-bold"
+                  style={{ borderRadius: '20px', padding: '2px 10px', fontSize: '0.85rem' }}
+                >
+                  {currencyCode}
+                </Button>
+
                 <LinkContainer to="/cart">
-                  <Nav.Link className="position-relative p-2" title="Cart">
-                    <i className="fas fa-shopping-cart" style={{ fontSize: "1.3rem", color: "#829ab1" }}></i>
-                    {cartItems && cartItems.length > 0 && (
-                      <span 
-                        className="badge bg-primary text-dark rounded-circle position-absolute d-flex align-items-center justify-content-center fw-bold" 
-                        style={{ top: "0", right: "0", fontSize: "0.6rem", width: "16px", height: "16px" }}
-                      >
-                        {cartItems.reduce((acc, item) => acc + item.qty, 0)}
-                      </span>
-                    )}
+                  <Nav.Link className="position-relative d-flex align-items-center" style={{ color: "#829ab1" }}>
+                    <i className="fas fa-shopping-cart" style={{ fontSize: "1.3rem" }}></i>
                   </Nav.Link>
                 </LinkContainer>
+
                 {userInfo ? (
                   <NavDropdown
                     title={
@@ -162,25 +158,20 @@ const Header = () => {
                     )}
 
                     {userInfo.isSeller && (
+                      <LinkContainer to="/seller/products">
+                        <NavDropdown.Item>My Products</NavDropdown.Item>
+                      </LinkContainer>
+                    )}
+
+                    {(userInfo.isAdmin || userInfo.isSeller) && (
                       <LinkContainer to="/seller/create-listing">
-                        <NavDropdown.Item>
-                          <strong>
-                            <i className="fas fa-magic emerald-text"></i> Smart
-                            Listing (AI)
-                          </strong>
-                        </NavDropdown.Item>
+                        <NavDropdown.Item>List Product</NavDropdown.Item>
                       </LinkContainer>
                     )}
 
                     {userInfo.isAdmin && (
                       <LinkContainer to="/admin/productlist">
                         <NavDropdown.Item>Products</NavDropdown.Item>
-                      </LinkContainer>
-                    )}
-
-                    {userInfo.isAdmin && (
-                      <LinkContainer to="/seller/create-listing">
-                        <NavDropdown.Item>List Product</NavDropdown.Item>
                       </LinkContainer>
                     )}
 

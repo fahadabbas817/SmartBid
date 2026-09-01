@@ -13,8 +13,13 @@ import {
 import { io } from "socket.io-client";
 import axios from "axios";
 import ConfirmAlert from "./ConfirmAlert";
+import Price from "./Price";
+import { useSelector } from "react-redux";
 
 const BidBox = ({ product, user }) => {
+  const currencyState = useSelector((state) => state.currency) || { code: 'USD', rate: 1 };
+  const { code, rate } = currencyState;
+
   // Dynamically pull values based on standard legacy structure
   const [currentBid, setCurrentBid] = useState(
     product.currentBid || product.startingPrice || 0,
@@ -97,7 +102,7 @@ const BidBox = ({ product, user }) => {
 
     if (bidAmount < currentBid + (product.minimumIncrement || 1)) {
       setErrorMesg(
-        `Bid must be at least $${currentBid + (product.minimumIncrement || 1)}`,
+        `Bid must be at least the minimum required amount.`,
       );
       return;
     }
@@ -196,7 +201,7 @@ const BidBox = ({ product, user }) => {
           whiteSpace: "nowrap",
         }}
       >
-        ${Number(currentBid).toLocaleString()} USD
+        <Price amount={currentBid} />
       </div>
     </div>
 
@@ -274,18 +279,18 @@ const BidBox = ({ product, user }) => {
           }}
         >
           <Form.Group controlId="bidAmount" className="mb-4">
-            <Form.Label>Bid Amount (USD)</Form.Label>
+            <Form.Label>Bid Amount ({code})</Form.Label>
             <Form.Control
               type="number"
-              step="0.01"
-              value={bidAmount}
-              onChange={(e) => setBidAmount(e.target.value)}
-              min={currentBid + (product.minimumIncrement || 1)}
+              step="any"
+              value={code === 'PKR' ? (bidAmount * rate).toFixed(0) : (bidAmount * rate).toFixed(2)}
+              onChange={(e) => setBidAmount(Number(e.target.value) / rate)}
+              min={(currentBid + (product.minimumIncrement || 1)) * rate}
               className="form-control font-weight-bold tracking-wider"
               style={{ backgroundColor: '#0b1521', color: '#fff', border: '1px solid rgba(57, 255, 20, 0.4)' }}
             />
             <Form.Text className="text-muted mt-2">
-              Minimum bid: ${currentBid + (product.minimumIncrement || 1)}
+              Minimum bid: <Price amount={currentBid + (product.minimumIncrement || 1)} />
             </Form.Text>
           </Form.Group>
           <Button

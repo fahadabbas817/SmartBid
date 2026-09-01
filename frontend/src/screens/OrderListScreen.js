@@ -4,7 +4,7 @@ import { Table, Button } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
-import EmptyState from '../components/EmptyState'
+import Price from '../components/Price'
 import { listOrders } from '../actions/orderActions'
 
 const OrderListScreen = ({ history }) => {
@@ -34,6 +34,12 @@ const OrderListScreen = ({ history }) => {
           <Loader />
         ) : error ? (
           <Message variant='danger'>{error}</Message>
+        ) : orders.length === 0 ? (
+          <div className="empty-state-glass">
+            <i className="fas fa-box-open"></i>
+            <h4 className="text-white">No Orders Found</h4>
+            <p className="text-muted">There are currently no orders in the system.</p>
+          </div>
         ) : (
           <div className="table-responsive">
             <Table hover variant='dark' className='table-custom-dark align-middle mb-0' style={{ backgroundColor: '#0b1521' }}>
@@ -54,7 +60,7 @@ const OrderListScreen = ({ history }) => {
                     <td className="px-3 py-3 text-muted small" style={{ fontFamily: 'monospace' }}>{order._id}</td>
                     <td className="px-3 py-3 font-weight-bold text-white">{order.user && order.user.name}</td>
                     <td className="px-3 py-3">{order.createdAt.substring(0, 10)}</td>
-                    <td className="px-3 py-3 text-success font-weight-bold">${order.totalPrice}</td>
+                    <td className="px-3 py-3 text-success font-weight-bold"><Price amount={order.totalPrice} /></td>
                     <td className="px-3 py-3 text-center">
                       {order.isPaid ? (
                         <div className="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm">{order.paidAt.substring(0, 10)}</div>
@@ -71,16 +77,13 @@ const OrderListScreen = ({ history }) => {
                     </td>
                     <td className="px-3 py-3 align-middle text-end d-flex justify-content-end">
                       <LinkContainer to={`/order/${order._id}`}>
-                        <Button variant='outline-primary' className='btn-sm font-weight-bold px-4 py-2' style={{ borderRadius: '8px', borderWidth: '2px' }}>
+                        <Button variant='info' className='btn-sm font-weight-bold px-4 py-2 text-white' style={{ borderRadius: '8px', borderWidth: '2px' }}>
                           DETAILS
                         </Button>
                       </LinkContainer>
                     </td>
                   </tr>
                 ))}
-                {(!orders || orders.length === 0) && (
-                  <EmptyState message="No orders to show." columns="7" icon="fas fa-shopping-cart" />
-                )}
               </tbody>
             </Table>
           </div>

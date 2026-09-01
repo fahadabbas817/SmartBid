@@ -5,7 +5,7 @@ import Product from "../models/productModel.js";
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = 24;
+  const pageSize = Number(req.query.pageSize) || 36;
   const page = Number(req.query.pageNumber) || 1;
 
   const keyword = req.query.keyword
@@ -24,13 +24,31 @@ const getProducts = asyncHandler(async (req, res) => {
     typeFilter.auctionMode = { $ne: true };
   }
 
-  let categoryFilter = {};
-  if (req.query.category) {
-      categoryFilter.category = req.query.category;
+  let statusFilter = {};
+  const now = new Date();
+  if (req.query.status === 'live') {
+    statusFilter = {
+      $or: [
+        { auctionMode: true, isAuctionClosed: false, auctionEndTime: { $gt: now } },
+        { auctionMode: false, countInStock: { $gt: 0 } }
+      ]
+    };
+  } else if (req.query.status === 'outOfStock') {
+    statusFilter = { auctionMode: false, countInStock: 0 };
+  } else if (req.query.status === 'ended') {
+    statusFilter = {
+      auctionMode: true,
+      $or: [
+        { isAuctionClosed: true },
+        { auctionEndTime: { $lte: now } }
+      ]
+    };
   }
 
-  const count = await Product.countDocuments({ ...keyword, ...typeFilter, ...categoryFilter });
-  const products = await Product.find({ ...keyword, ...typeFilter, ...categoryFilter })
+  const filter = { ...keyword, ...typeFilter, ...statusFilter };
+
+  const count = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
     .sort({ createdAt: -1, _id: 1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
@@ -134,20 +152,21 @@ const updateProduct = asyncHandler(async (req, res) => {
       throw new Error("Not authorized to update this product");
     }
 
-    product.name = name;
-    product.price = price;
-    product.description = description;
-    product.image = image;
-    product.brand = brand;
-    product.category = category;
-    product.countInStock = countInStock;
+    product.name = name || product.name;
+    product.price = price !== undefined ? price : product.price;
+    product.description = description || product.description;
+    product.image = image || product.image;
+    // brand is required in schema — preserve existing value if UI doesn't send it
+    product.brand = brand || product.brand;
+    product.category = category || product.category;
+    product.countInStock = countInStock !== undefined ? countInStock : product.countInStock;
     product.auctionMode =
       auctionMode !== undefined ? auctionMode : product.auctionMode;
     product.fixedPriceMode =
       fixedPriceMode !== undefined ? fixedPriceMode : product.fixedPriceMode;
-    product.startingPrice = startingPrice || product.startingPrice;
-    product.reservePrice = reservePrice || product.reservePrice;
-    product.minimumIncrement = minimumIncrement || product.minimumIncrement;
+    product.startingPrice = startingPrice !== undefined ? startingPrice : product.startingPrice;
+    product.reservePrice = reservePrice !== undefined ? reservePrice : product.reservePrice;
+    product.minimumIncrement = minimumIncrement !== undefined ? minimumIncrement : product.minimumIncrement;
     product.auctionEndTime = auctionEndTime || product.auctionEndTime;
 
     const updatedProduct = await product.save();
@@ -247,6 +266,60 @@ const endAuctionEarly = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Fetch products listed by the logged-in seller
+// @route   GET /api/products/mine
+// @access  Private/Seller or Admin
+const getMyProducts = asyncHandler(async (req, res) => {
+  const pageSize = 36;
+  const page = Number(req.query.pageNumber) || 1;
+
+  const filter = { user: req.user._id };
+
+  const count = await Product.countDocuments(filter);
+  const products = await Product.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(pageSize)
+    .skip(pageSize * (page - 1));
+
+  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+});
+
+// @desc    Republish all ended auctions
+// @route   PUT /api/products/republish-auctions
+// @access  Private/Admin
+const republishAuctions = asyncHandler(async (req, res) => {
+  const now = new Date();
+  const filter = {
+    auctionMode: true,
+    $or: [{ isAuctionClosed: true }, { auctionEndTime: { $lte: now } }],
+  };
+
+  if (req.body.productIds && req.body.productIds.length > 0) {
+    filter._id = { $in: req.body.productIds };
+  }
+
+  const productsToRepublish = await Product.find(filter);
+
+  if (productsToRepublish.length === 0) {
+    res.status(404);
+    throw new Error("No ended auctions found to republish");
+  }
+
+  const newEndTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // Default 24 hours extension
+
+  for (let product of productsToRepublish) {
+    product.isAuctionClosed = false;
+    product.auctionEndTime = newEndTime;
+    product.currentBid = product.startingPrice;
+    product.highestBidder = null;
+    await product.save();
+  }
+
+  res.json({
+    message: `${productsToRepublish.length} auctions republished successfully`,
+  });
+});
+
 export {
   getProducts,
   getProductById,
@@ -256,4 +329,6 @@ export {
   createProductReview,
   getTopProducts,
   endAuctionEarly,
+  republishAuctions,
+  getMyProducts,
 };

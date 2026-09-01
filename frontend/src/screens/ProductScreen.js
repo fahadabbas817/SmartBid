@@ -20,6 +20,7 @@ import {
 } from "../actions/productActions";
 import { PRODUCT_CREATE_REVIEW_RESET } from "../constants/productConstants";
 import BidBox from "../components/BidBox";
+import Price from "../components/Price";
 
 const ProductScreen = ({ history, match }) => {
   const [qty, setQty] = useState(1);
@@ -80,7 +81,8 @@ const ProductScreen = ({ history, match }) => {
       );
 
     // Split description by bullets '•', '*', '-' or newlines to format nicely
-    const parts = desc.split(/ • | \* | - |\n/g).filter((p) => p.trim() !== "");
+    const rawParts = desc.split(/(?:\n| • | \* | - )/g).filter((p) => p.trim() !== "");
+    const parts = rawParts.map(p => p.trim().replace(/^[•\*\-]\s*/, ''));
 
     if (parts.length <= 1) {
       return <p>{desc}</p>;
@@ -92,7 +94,7 @@ const ProductScreen = ({ history, match }) => {
         <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
           {parts.slice(1).map((part, index) => (
             <li key={index} className="mb-2">
-              {part.trim()}
+              {part}
             </li>
           ))}
         </ul>
@@ -196,7 +198,7 @@ const ProductScreen = ({ history, match }) => {
                       className="text-white font-weight-bold m-0 mb-4"
                       style={{ fontSize: "4rem" }}
                     >
-                      ${product.price}
+                      <Price amount={product.price} />
                     </h2>
 
                     <Row className="align-items-center mb-4">
@@ -298,43 +300,22 @@ const ProductScreen = ({ history, match }) => {
                     }}
                   >
                     <Row className="mb-4">
-                      <Col md={6}>
+                      <Col md={12}>
                         <div className="mb-2">
                           <strong style={{ color: "#829ab1" }}>
                             Model No:
                           </strong>{" "}
-                          {product._id?.substring(0, 8).toUpperCase() ||
-                            "AC-LE-001"}
+                          {product._id?.substring(0, 8).toUpperCase()}
                         </div>
                         <div className="mb-2">
                           <strong style={{ color: "#829ab1" }}>Brand:</strong>{" "}
-                          {product.brand || "Premium Selection"}
+                          {product.brand}
                         </div>
                         <div className="mb-2">
                           <strong style={{ color: "#829ab1" }}>
                             Category:
                           </strong>{" "}
-                          {product.category || "High-End Goods"}
-                        </div>
-                      </Col>
-                      <Col md={6}>
-                        <div className="mb-2">
-                          <strong style={{ color: "#829ab1" }}>
-                            Condition:
-                          </strong>{" "}
-                          Pristine
-                        </div>
-                        <div className="mb-2">
-                          <strong style={{ color: "#829ab1" }}>
-                            Authenticity:
-                          </strong>{" "}
-                          Verified & Certified
-                        </div>
-                        <div className="mb-2">
-                          <strong style={{ color: "#829ab1" }}>
-                            Shipping:
-                          </strong>{" "}
-                          Insured Global Delivery
+                          {product.category}
                         </div>
                       </Col>
                     </Row>

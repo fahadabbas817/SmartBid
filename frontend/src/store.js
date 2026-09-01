@@ -10,6 +10,8 @@ import {
   productReviewCreateReducer,
   productTopRatedReducer,
   productEndAuctionReducer,
+  sellerProductListReducer,
+  productRepublishReducer,
 } from './reducers/productReducers'
 
 import { cartReducer } from './reducers/cartReducers'
@@ -56,6 +58,8 @@ import{userSubmitReducer,
   checkUpdateReducer
 } from './reducers/checkReducers'
 
+import { currencyReducer } from './reducers/currencyReducers'
+
 const reducer = combineReducers({
   productList: productListReducer,
   productDetails: productDetailsReducer,
@@ -89,7 +93,10 @@ const reducer = combineReducers({
   userBid: userBidReducer,
   auctionDelete: auctionDeleteReducer,
   userSubmit: userSubmitReducer,
-  checkUpdate: checkUpdateReducer
+  checkUpdate: checkUpdateReducer,
+  sellerProductList: sellerProductListReducer,
+  productRepublish: productRepublishReducer,
+  currency: currencyReducer,
 })
 
 
@@ -105,12 +112,19 @@ const shippingAddressFromStorage = localStorage.getItem('shippingAddress')
   ? JSON.parse(localStorage.getItem('shippingAddress'))
   : {}
 
+const currencyFromStorage = localStorage.getItem('currency')
+  ? localStorage.getItem('currency')
+  : 'USD'
+
+const rateFromStorage = currencyFromStorage === 'PKR' ? 280 : 1
+
 const initialState = {
   cart: {
     cartItems: cartItemsFromStorage,
     shippingAddress: shippingAddressFromStorage,
   },
   userLogin: { userInfo: userInfoFromStorage },
+  currency: { code: currencyFromStorage, rate: rateFromStorage },
 }
 
 const middleware = [thunk]

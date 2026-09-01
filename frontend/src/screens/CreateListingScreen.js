@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Message from "../components/Message";
+import Price from "../components/Price";
 
 const CreateListingScreen = ({ history }) => {
   const [listingMode, setListingMode] = useState("auction");
@@ -45,6 +46,12 @@ const CreateListingScreen = ({ history }) => {
   const [descResult, setDescResult] = useState(null);
   const [descError, setDescError] = useState("");
 
+  // AI Image Fetcher State
+  const [imageLoading, setImageLoading] = useState(false);
+  const [fetchedImages, setFetchedImages] = useState([]);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageError, setImageError] = useState("");
+
   // Visual success states
   const [priceApplied, setPriceApplied] = useState(false);
   const [descApplied, setDescApplied] = useState(false);
@@ -53,34 +60,38 @@ const CreateListingScreen = ({ history }) => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
+  const currencyState = useSelector((state) => state.currency) || { code: 'USD', rate: 1 };
+  const { code, rate } = currencyState;
+
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState("");
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
+    setCreateError("");
+
     if (!title) {
-      alert("Title is required");
+      setCreateError("Title is required");
       return;
     }
 
     if (!category) {
-      alert("Category is required");
+      setCreateError("Category is required");
       return;
     }
 
-    if (listingMode === "auction" && (!startingPrice || !auctionEndTime)) {
-      alert("Starting price and auction end date are required for auctions");
+    if (listingMode === "auction" && (startingPrice === "" || startingPrice === null || startingPrice === undefined || !auctionEndTime)) {
+      setCreateError("Starting price and auction end date are required for auctions");
       return;
     }
 
-    if (listingMode === "fixed" && !price) {
-      alert("Price is required for standard items");
+    if (listingMode === "fixed" && (price === "" || price === null || price === undefined)) {
+      setCreateError("Price cannot be empty for standard items");
       return;
     }
 
     setCreateLoading(true);
-    setCreateError("");
 
     try {
       const config = {
@@ -89,6 +100,16 @@ const CreateListingScreen = ({ history }) => {
           Authorization: `Bearer ${userInfo?.token}`,
         },
       };
+
+      let formattedAuctionEndTime = null;
+      if (listingMode === "auction" && auctionEndTime) {
+        const [datePart, timePart] = auctionEndTime.split('T');
+        const [year, month, day] = datePart.split('-');
+        const [hour, minute] = timePart.split(':');
+        const localDate = new Date(year, month - 1, day, hour, minute);
+        formattedAuctionEndTime = localDate.toISOString();
+      }
+
 
       const payload =
         listingMode === "auction"
@@ -101,7 +122,7 @@ const CreateListingScreen = ({ history }) => {
               startingPrice,
               reservePrice,
               minimumIncrement,
-              auctionEndTime,
+              auctionEndTime: formattedAuctionEndTime,
               auctionMode: true,
               fixedPriceMode: false,
               countInStock: 1,
@@ -121,8 +142,24 @@ const CreateListingScreen = ({ history }) => {
 
       setPublishSuccess(true);
       setTimeout(() => {
-        history.push("/"); // Redirect user to home or live screen after creation
-      }, 1500);
+        setPublishSuccess(false);
+        setTitle('');
+        setCategory('');
+        setDescription('');
+        setImage('');
+        setPrice(0);
+        setCountInStock(0);
+        setStartingPrice(0);
+        setReservePrice(0);
+        setMinimumIncrement(0);
+        setAuctionEndTime('');
+        setPriceResult(null);
+        setPriceError('');
+        setPriceApplied(false);
+        setDescResult(null);
+        setDescError('');
+        setDescApplied(false);
+      }, 2500);
     } catch (error) {
       setCreateError(
         error.response && error.response.data.message
@@ -224,11 +261,43 @@ const CreateListingScreen = ({ history }) => {
     setDescLoading(false);
   };
 
+  const handleFetchImages = async () => {
+    if (!title) {
+      setImageError("Please enter a Product Title first.");
+      setShowImageModal(true);
+      return;
+    }
+
+    setImageError("");
+    setFetchedImages([]);
+    setImageLoading(true);
+    setShowImageModal(true);
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userInfo?.token}`,
+        },
+      };
+
+      const { data } = await axios.post("/api/ai/fetch-images", { title }, config);
+      setFetchedImages(data.images || []);
+    } catch (error) {
+      setImageError(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
+      );
+    }
+    setImageLoading(false);
+  };
+
   const applyPriceSuggestion = () => {
     if (priceResult) {
       setStartingPrice(priceResult.suggestedStartingPrice);
       setReservePrice(priceResult.suggestedReservePrice);
       setMinimumIncrement(priceResult.suggestedMinimumIncrement || 5);
+      setPrice(priceResult.estimatedFinalPrice);
       setPriceApplied(true);
       setTimeout(() => {
         setPriceApplied(false);
@@ -372,6 +441,14 @@ const CreateListingScreen = ({ history }) => {
                       {uploading ? <Spinner animation="border" size="sm" /> : <><i className="fas fa-upload mr-2 text-primary"></i> Upload</>}
                     </label>
                   </div>
+                  <Button
+                    variant="outline-info"
+                    className="rounded-pill px-3 py-2 m-0 d-flex align-items-center justify-content-center h-100 font-weight-bold shadow-sm"
+                    style={{ whiteSpace: 'nowrap', borderColor: 'rgba(255,255,255,0.1)' }}
+                    onClick={handleFetchImages}
+                  >
+                    <i className="fas fa-search mr-2"></i> Web Images
+                  </Button>
                 </div>
               </Form.Group>
 
@@ -438,12 +515,12 @@ const CreateListingScreen = ({ history }) => {
                     <Col md={6}>
                       <Form.Group controlId="price">
                         <Form.Label className="small text-muted mb-1">
-                          Price ($)
+                          Price ({code})
                         </Form.Label>
                         <Form.Control
                           type="number"
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
+                          value={price ? (price * rate).toFixed(code === 'PKR' ? 0 : 2) : ''}
+                          onChange={(e) => setPrice(Number(e.target.value) / rate)}
                           className="rounded-pill px-3 py-2 border-0 shadow-sm"
                           style={{ backgroundColor: "#0b1521", color: "#fff" }}
                         />
@@ -469,12 +546,12 @@ const CreateListingScreen = ({ history }) => {
                     <Col md={6} lg={3}>
                       <Form.Group controlId="startingPrice">
                         <Form.Label className="small text-muted mb-1">
-                          Start Price
+                          Start Price ({code})
                         </Form.Label>
                         <Form.Control
                           type="number"
-                          value={startingPrice}
-                          onChange={(e) => setStartingPrice(e.target.value)}
+                          value={startingPrice ? (startingPrice * rate).toFixed(code === 'PKR' ? 0 : 2) : ''}
+                          onChange={(e) => setStartingPrice(Number(e.target.value) / rate)}
                           className="rounded-pill px-3 py-2 border-0 shadow-sm"
                           style={{ backgroundColor: "#0b1521", color: "#fff" }}
                         />
@@ -483,12 +560,12 @@ const CreateListingScreen = ({ history }) => {
                     <Col md={6} lg={3}>
                       <Form.Group controlId="reservePrice">
                         <Form.Label className="small text-muted mb-1">
-                          Reserve
+                          Reserve ({code})
                         </Form.Label>
                         <Form.Control
                           type="number"
-                          value={reservePrice}
-                          onChange={(e) => setReservePrice(e.target.value)}
+                          value={reservePrice ? (reservePrice * rate).toFixed(code === 'PKR' ? 0 : 2) : ''}
+                          onChange={(e) => setReservePrice(Number(e.target.value) / rate)}
                           className="rounded-pill px-3 py-2 border-0 shadow-sm"
                           style={{ backgroundColor: "#0b1521", color: "#fff" }}
                         />
@@ -497,12 +574,12 @@ const CreateListingScreen = ({ history }) => {
                     <Col md={6} lg={3}>
                       <Form.Group controlId="minimumIncrement">
                         <Form.Label className="small text-muted mb-1">
-                          Min Increment
+                          Min Increment ({code})
                         </Form.Label>
                         <Form.Control
                           type="number"
-                          value={minimumIncrement}
-                          onChange={(e) => setMinimumIncrement(e.target.value)}
+                          value={minimumIncrement ? (minimumIncrement * rate).toFixed(code === 'PKR' ? 0 : 2) : ''}
+                          onChange={(e) => setMinimumIncrement(Number(e.target.value) / rate)}
                           className="rounded-pill px-3 py-2 border-0 shadow-sm"
                           style={{ backgroundColor: "#0b1521", color: "#fff" }}
                         />
@@ -622,7 +699,7 @@ const CreateListingScreen = ({ history }) => {
               >
                 <strong>Suggested Start:</strong>
                 <span className="text-success font-weight-bold">
-                  ${priceResult.suggestedStartingPrice}
+                  <Price amount={priceResult.suggestedStartingPrice} />
                 </span>
               </div>
               <div
@@ -631,7 +708,7 @@ const CreateListingScreen = ({ history }) => {
               >
                 <strong>Estimated Final:</strong>
                 <span className="electric-blue-text font-weight-bold">
-                  ${priceResult.estimatedFinalPrice}
+                  <Price amount={priceResult.estimatedFinalPrice} />
                 </span>
               </div>
               <div
@@ -640,13 +717,13 @@ const CreateListingScreen = ({ history }) => {
               >
                 <strong>Suggested Reserve:</strong>
                 <span className="text-warning font-weight-bold">
-                  ${priceResult.suggestedReservePrice}
+                  <Price amount={priceResult.suggestedReservePrice} />
                 </span>
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <strong>Suggested Min Increment:</strong>
                 <span className="text-muted font-weight-bold">
-                  ${priceResult.suggestedMinimumIncrement || 5}
+                  <Price amount={priceResult.suggestedMinimumIncrement || 5} />
                 </span>
               </div>
               <div className="w-100 text-center mb-3">
@@ -706,7 +783,7 @@ const CreateListingScreen = ({ history }) => {
           className="modal-header-custom border-0 pb-0 text-white"
         >
           <Modal.Title className="text-white font-weight-bold">
-            <i className="fas fa-magic text-primary mr-2"></i> AI Copywriter
+            <i className="fas fa-magic text-success mr-2"></i> AI Copywriter
           </Modal.Title>
         </Modal.Header>
         <Modal.Body
@@ -773,59 +850,126 @@ const CreateListingScreen = ({ history }) => {
               <p
                 className="font-italic mb-4 p-3 rounded"
                 style={{
-                  backgroundColor: "rgba(57, 255, 20, 0.1)",
-                  border: "1px solid rgba(57, 255, 20, 0.3)",
-                  color: "#39ff14",
+                  backgroundColor: "rgba(0,0,0,0.2)",
+                  borderLeft: "4px solid #39ff14",
+                  color: "#a0aec0",
                 }}
               >
-                🔥 "{descResult.marketingCopy}"
+                "{descResult.marketingCopy}"
               </p>
-
-              <div className="d-flex justify-content-end">
+              <Button
+                variant={descApplied ? "success" : "primary"}
+                className="w-100 font-weight-bold rounded-pill text-dark neon-pulse-btn"
+                onClick={applyDescSuggestion}
+                style={
+                  !descApplied
+                    ? {
+                        background: "linear-gradient(45deg, #39ff14, #26c205)",
+                        border: "none",
+                      }
+                    : {}
+                }
+              >
+                {descApplied ? (
+                  <>
+                    <i className="fas fa-check mr-1"></i> Applied!
+                  </>
+                ) : (
+                  "Apply Description"
+                )}
+              </Button>
+              <div className="text-center mt-3">
                 <Button
-                  variant="outline-secondary"
-                  className="mr-2 rounded-pill text-white"
-                  style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                  onClick={() =>
-                    copyToClipboard(descResult.generatedDescription)
-                  }
+                  variant="link"
+                  className="text-muted small p-0"
+                  onClick={() => copyToClipboard(descResult.generatedDescription)}
                 >
-                  <i className="fas fa-copy"></i> Copy
-                </Button>
-                <Button
-                  variant="outline-primary"
-                  className="mr-2 rounded-pill"
-                  onClick={handleGenerateDescription}
-                >
-                  <i className="fas fa-sync"></i> Retry
-                </Button>
-                <Button
-                  variant={descApplied ? "success" : "primary"}
-                  className="font-weight-bold rounded-pill text-dark neon-pulse-btn"
-                  style={
-                    !descApplied
-                      ? {
-                          background:
-                            "linear-gradient(45deg, #39ff14, #26c205)",
-                          border: "none",
-                        }
-                      : {}
-                  }
-                  onClick={applyDescSuggestion}
-                >
-                  {descApplied ? (
-                    <>
-                      <i className="fas fa-check mr-1"></i> Applied!
-                    </>
-                  ) : (
-                    "Use in Form"
-                  )}
+                  <i className="far fa-copy mr-1"></i> Copy to clipboard
                 </Button>
               </div>
             </div>
           )}
         </Modal.Body>
       </Modal>
+
+      {/* AI Web Image Modal */}
+      <Modal
+        show={showImageModal}
+        onHide={() => setShowImageModal(false)}
+        centered
+        size="lg"
+        contentClassName="rounded-modal border-0 overflow-hidden"
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#071018",
+            borderBottom: "1px solid #1a2838",
+          }}
+          className="modal-header-custom border-0 pb-0 text-white"
+        >
+          <Modal.Title className="text-white font-weight-bold">
+            <i className="fas fa-images text-info mr-2"></i> Select Web Image
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          style={{ backgroundColor: "#0b1521" }}
+          className="text-white p-4"
+        >
+          {imageLoading && (
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="info" />
+              <p className="mt-3 text-muted">Searching the web for "{title}"...</p>
+            </div>
+          )}
+
+          {imageError && (
+            <Badge variant="danger" className="mb-2 w-100 p-2">
+              {imageError}
+            </Badge>
+          )}
+
+          {!imageLoading && !imageError && fetchedImages.length === 0 && (
+            <p className="text-muted text-center py-4">No images found. Try a different title.</p>
+          )}
+
+          {!imageLoading && fetchedImages.length > 0 && (
+            <Row>
+              {fetchedImages.map((imgUrl, idx) => (
+                <Col md={3} sm={4} xs={6} key={idx} className="mb-3">
+                  <div 
+                    className="position-relative img-thumbnail-wrapper"
+                    style={{
+                      cursor: 'pointer',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      border: image === imgUrl ? '3px solid #39ff14' : '1px solid rgba(255,255,255,0.1)'
+                    }}
+                    onClick={() => {
+                      setImage(imgUrl);
+                      setShowImageModal(false);
+                    }}
+                  >
+                    <img 
+                      src={imgUrl} 
+                      alt={`Web Search ${idx}`} 
+                      className="img-fluid" 
+                      style={{ height: '120px', width: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                    {image === imgUrl && (
+                      <div className="position-absolute" style={{ top: '5px', right: '5px', backgroundColor: '#39ff14', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="fas fa-check text-dark" style={{ fontSize: '12px' }}></i>
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Modal.Body>
+      </Modal>
+
     </div>
   );
 };

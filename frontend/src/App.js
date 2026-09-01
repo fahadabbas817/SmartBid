@@ -33,9 +33,23 @@ import AuctionEditScreen from "./screens/AuctionEditScreen";
 import QueryListScreen from "./screens/QueryListScreen";
 import NotFoundScreen from "./screens/NotFoundScreen";
 import SessionTimeout from "./components/SessionTimeout"; // Add this line
+import { io } from "socket.io-client";
+import { useDispatch } from "react-redux";
+import { PRODUCT_UPDATE_BID } from "./constants/productConstants";
 import CreateListingScreen from "./screens/CreateListingScreen";
+import SellerProductListScreen from "./screens/SellerProductListScreen";
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    const socket = io();
+    socket.on("bidUpdatedGlobal", (data) => {
+      dispatch({ type: PRODUCT_UPDATE_BID, payload: data });
+    });
+    return () => socket.disconnect();
+  }, [dispatch]);
+
   return (
     <Router>
       <Header />
@@ -79,6 +93,15 @@ const App = () => {
             <Route
               path="/seller/create-listing"
               component={CreateListingScreen}
+            />
+            <Route
+              path="/seller/products"
+              component={SellerProductListScreen}
+              exact
+            />
+            <Route
+              path="/seller/products/:pageNumber"
+              component={SellerProductListScreen}
             />
             <Route path="/admin/Auctionlist" component={AuctionListScreen} />
             <Route path="/admin/Auctionedit" component={AuctionEditScreen} />

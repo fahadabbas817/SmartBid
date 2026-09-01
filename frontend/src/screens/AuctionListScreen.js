@@ -5,7 +5,6 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { Link } from 'react-router-dom';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
-import EmptyState from '../components/EmptyState';
 import { listProducts, endAuctionEarly } from '../actions/productActions';
 import { updateCheck } from '../actions/checkActions';
 
@@ -21,11 +20,6 @@ const AuctionListScreen = ({ history, match }) => {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  const [isChecked, setIsChecked] = useState(() => {
-    const storedValue = localStorage.getItem('isChecked');
-    return storedValue ? JSON.parse(storedValue) : false;
-  });
-
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
@@ -37,9 +31,7 @@ const AuctionListScreen = ({ history, match }) => {
     }
   }, [dispatch, history, userInfo, successEndAuction]);
 
-  useEffect(() => {
-    localStorage.setItem('isChecked', JSON.stringify(isChecked));
-  }, [isChecked]);
+
 
   const endAuctionHandler = (id) => {
     if (window.confirm('Are you sure you want to end this auction early? Bidding will be closed permanently.')) {
@@ -77,16 +69,7 @@ const AuctionListScreen = ({ history, match }) => {
     document.body.removeChild(link);
   };
 
-  const handleChange = (e) => {
-    setIsChecked(e.target.checked);
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(updateCheck(isChecked));
-    localStorage.setItem('isChecked', JSON.stringify(isChecked));
-    setShowAlert(true);
-  };
 
   return (
     <div className='card shadow-sm border-0 rounded-lg bg-transparent overflow-hidden my-4' style={{ backgroundColor: '#0b1521 !important' }}>
@@ -96,34 +79,10 @@ const AuctionListScreen = ({ history, match }) => {
           <Button variant='success' className="font-weight-bold shadow-sm d-flex align-items-center border-0 px-3 py-2" onClick={() => generateCSV(products || [])} style={{ borderRadius: '8px' }}>
             <i className='fas fa-file-export me-2'></i> Export CSV
           </Button>
-          <Link to='/admin/Auctionedit' className="text-decoration-none">
-            <Button variant='primary' className="font-weight-bold shadow-sm d-flex align-items-center px-3 py-2" style={{ borderRadius: '8px' }}>
-              <i className='fas fa-plus me-2'></i> Create Auction
-            </Button>
-          </Link>
         </div>
       </div>
 
-      <div className="p-4 border-bottom" style={{ backgroundColor: 'rgba(255,255,255,0.01)', borderColor: 'rgba(255,255,255,0.05) !important' }}>
-        <Form onSubmit={handleSubmit} className="d-flex align-items-center flex-wrap" style={{ gap: '1rem' }}>
-          <Form.Group controlId='isCheck' className="mb-0 d-flex align-items-center" style={{ gap: '0.8rem' }}>
-            <Form.Check
-              type='switch'
-              id='custom-switch'
-              label={<span className="font-weight-bold text-white ms-2" style={{ letterSpacing: '1px' }}>GLOBAL BIDDING STATUS</span>}
-              checked={isChecked}
-              onChange={handleChange}
-              style={{ transform: 'scale(1.2)' }}
-            />
-            <span className={`badge ${isChecked ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '0.9rem', marginLeft: '1rem', letterSpacing: '1px' }}>
-              {isChecked ? 'LIVE / ACTIVE' : 'PAUSED'}
-            </span>
-          </Form.Group>
-          <Button type='submit' variant='outline-primary' size="sm" className="font-weight-bold px-4 ms-auto" onClick={handleSubmit} style={{ borderRadius: '20px', borderWidth: '2px' }}>
-            Save Status
-          </Button>
-        </Form>
-      </div>
+
 
       <div className="p-4" style={{ backgroundColor: '#0b1521' }}>
         {successEndAuction && <Message variant='success'>Auction forced to end successfully.</Message>}
@@ -160,20 +119,20 @@ const AuctionListScreen = ({ history, match }) => {
                          <div className="badge bg-danger text-white px-3 py-2 rounded-pill shadow-sm">Ended</div>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-end">
-                      <div className='d-flex justify-content-end align-items-center flex-nowrap' style={{ gap: '0.8rem' }}>
+                    <td className="px-3 py-3 text-end" style={{ whiteSpace: 'nowrap' }}>
+                      <div className='d-flex justify-content-end align-items-center' style={{ gap: '0.5rem' }}>
                         <LinkContainer to={`/admin/product/${product._id}/edit`}>
-                          <Button variant='dark' className='btn-sm rounded-circle shadow-sm border-0 d-flex align-items-center justify-content-center' title="Edit Product" style={{ backgroundColor: '#1a2838', width: '35px', height: '35px', padding: 0 }}>
-                            <i className='fas fa-edit text-info'></i>
+                          <Button variant='light' className='btn-sm rounded-circle shadow-sm border-0 d-flex align-items-center justify-content-center' title="Edit Product" style={{ width: '35px', height: '35px', padding: 0 }}>
+                            <i className='fas fa-edit'></i>
                           </Button>
                         </LinkContainer>
                         {!product.isAuctionClosed && (
                           <Button
-                            variant='outline-danger'
-                            className='btn-sm font-weight-bold px-3 py-1'
+                            variant='danger'
+                            className='btn-sm font-weight-bold px-3 py-1 text-white text-nowrap'
                             title="End Auction Early"
                             onClick={() => endAuctionHandler(product._id)}
-                            style={{ borderRadius: '8px', borderWidth: '2px' }}
+                            style={{ borderRadius: '8px' }}
                           >
                             END NOW
                           </Button>
@@ -183,7 +142,11 @@ const AuctionListScreen = ({ history, match }) => {
                   </tr>
                 ))}
                 {(!products || products.length === 0) && (
-                  <EmptyState message="No active auction products found." columns="6" icon="fas fa-gavel" />
+                  <tr>
+                    <td colSpan="6" className="text-center py-5 text-muted">
+                      No active auction products found.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </Table>
